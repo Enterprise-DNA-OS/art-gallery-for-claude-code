@@ -164,8 +164,8 @@ export function format(value){
  const cell=(v,k,r)=>v==null?'':k.endsWith('_cents')?`${r.currency||''} ${(Number(v)/100).toFixed(2)}`.trim():typeof v==='object'?JSON.stringify(v):String(v).replace(/\n/g,' ');
  const matrix=[cols.map(k=>k.replace(/_cents$/,'').replaceAll('_',' ')),...value.map(r=>cols.map(k=>cell(r[k],k,r)))];
  const widths=cols.map((_,i)=>Math.min(64,Math.max(...matrix.map(r=>r[i].length))));
- const line=r=>'| '+r.map((v,i)=>v.slice(0,widths[i]).padEnd(widths[i])).join(' | ')+' |';
- return [line(matrix[0]),'| '+widths.map(w=>'-'.repeat(w)).join(' | ')+' |',...matrix.slice(1).map(line)].join('\n');
+ const line=r=>r.map((v,i)=>v.slice(0,widths[i]).padEnd(widths[i])).join('  ').trimEnd();
+ return [line(matrix[0]),widths.map(w=>'-'.repeat(w)).join('  '),...matrix.slice(1).map(line)].join('\n');
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
  const args=process.argv.slice(2);if(!args.length||args.includes('--help')){console.log(`Art Gallery for Claude Code\nRead: ${Object.keys(reads).join(', ')}, artist <name>, artwork <stock>, contact <name>, compliance, questions [--question=1..10]\nWrite: add artist|contact|artwork|consignment|exhibition --field=value; offer <stock> --collector=name --followup=YYYY-MM-DD; sale <stock> --collector=name --ref=INV --cents=N --due=YYYY-MM-DD --market=AU|NZ|OTHER [--resale=true]; receive|settle <ref> --cents=N; move <stock> --to=location; condition <stock> --note=text; log <collector> --note=text; hang <exhibition> --artwork=stock; royalty-review <ref> --status=reported|not-applicable --evidence=text\nFiles: import artlogic --artworks=file.csv --contacts=file.csv [--dry-run]; export [--out=new-file.json]; draft-followups\nAll results support --json. No command sends or transfers money.`);}
