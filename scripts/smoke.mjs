@@ -1,0 +1,54 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {getDb,REPO_ROOT} from './lib/db.mjs';
+import {migrate} from './migrate.mjs';
+import {execute,reads,questions,format} from './gallery.mjs';
+import {parseCsv} from './lib/csv.mjs';
+const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'gallery-test-'));
+process.env.DATABASE_URL=process.env.TEST_DATABASE_URL||'';process.env.DATA_DIR=path.join(scratch,'db');process.env.OUTPUT_DIR=path.join(scratch,'output');
+let db,checks=0;const ok=(label)=>{checks++;console.log(`ok ${checks}: ${label}`);};
+const run=(...a)=>execute(db,a),n=v=>Number(v),day=(d)=>new Date(Date.now()+d*86400000).toISOString().slice(0,10);
+function script(name,args=[],expected=0){const r=spawnSync(process.execPath,[path.join(REPO_ROOT,'scripts',name),...args],{cwd:REPO_ROOT,env:process.env,encoding:'utf8'});assert.equal(r.status,expected,`${name}: ${r.stderr}\n${r.stdout}`);return r;}
+try{
+ db=await getDb();assert.equal(db.mode,process.env.TEST_DATABASE_URL?'postgres':'pglite');await migrate(db);assert.equal((await migrate(db)).ran.length,0);ok('migrations apply once');
+ const seed=fs.readFileSync(path.join(REPO_ROOT,'supabase/seed.sql'),'utf8');await db.exec(seed);await db.exec(seed);
+ assert.equal((await run('artworks')).length,6);assert.equal((await run('contacts')).length,3);ok('seed is idempotent');
+ for(const cmd of Object.keys(reads)){assert.ok(Array.isArray(await run(cmd)));ok(`read ${cmd}`);}
+ const attention=await run('attention');for(const kind of ['consignment','collector','settlement','followup','condition','royalty'])assert.ok(attention.some(r=>r.kind===kind));ok('all deliberate overdue and stale records surface');
+ assert.equal((await run('artist','mArA')).record.name,'Mara Ellis');assert.equal((await run('artwork','HR-101')).record.title,'Tidal Study');assert.equal((await run('contact','Riverside')).record.name,'Riverside Collection');
+ await assert.rejects(run('contact','Alex'),/Ambiguous.*Alex Chen.*Alex Morgan/);await assert.rejects(run('contact','missing'),/No match/);ok('case-insensitive, stock and ambiguous references');
+ const answers=await run('questions');assert.equal(answers.length,10);for(let i=1;i<=10;i++){assert.equal((await run('questions',`--question=${i}`)).length,1);assert.ok(answers[i-1].rows.length>0,`question ${i} has a demonstrated answer`);}await assert.rejects(run('questions','--question=11'));ok('all ten questions answer demo records');
+ assert.match(format(await run('stocktake')),/Tidal Study/);ok('human output');
+ const findings=await run('compliance');assert.ok(findings.some(r=>r.rule==='AU-RESALE'));assert.ok(findings.some(r=>r.rule==='CONSIGNMENT'));ok('compliance has sourced findings');
+ const royalty=(await run('royalties'))[0];assert.equal(n(royalty.indicative_royalty_cents),40000);ok('Australian review amount is indicative five percent');
+ await run('royalty-review','INV-301','--status=reported','--evidence=Demo acknowledgement RR-301');assert.ok(!(await run('compliance')).some(r=>r.rule==='AU-RESALE'));await assert.rejects(run('royalty-review','INV-302','--status=reported','--evidence=x'),/Not a resale/);ok('report evidence clears the review without submitting');
+ await assert.rejects(run('sale','HR-101','--collector=Alex Morgan','--ref=BAD','--cents=100000',`--due=${day(10)}`,'--market=NZ'),/agreement/);
+ await assert.rejects(run('sale','HR-105','--collector=Alex Morgan','--ref=BAD','--cents=100000',`--due=${day(10)}`,'--market=NZ'),/agreement/);ok('missing and expired agreements block sale');
+ await run('offer','HR-102','--collector=Alex Morgan',`--followup=${day(2)}`);
+ const [sale]=await run('sale','HR-102','--collector=Alex Morgan','--ref=INV-NEW','--cents=600000',`--due=${day(10)}`,'--market=NZ','--resale=false');assert.equal(n(sale.artist_due_cents),360000);assert.equal((await run('artwork','HR-102')).record.status,'sold');
+ assert.equal((await db.query("select state from offers where artwork_id=$1 and contact_id=(select id from contacts where name='Alex Morgan')",[sale.artwork_id]))[0].state,'won');ok('sale snapshots commission and closes competing offers');
+ await assert.rejects(run('sale','HR-102','--collector=Alex Morgan','--ref=DUP','--cents=100',`--due=${day(1)}`,'--market=NZ'),/not available/);
+ await assert.rejects(run('settle','INV-NEW','--cents=1'),/Collector balance/);await assert.rejects(run('receive','INV-NEW','--cents=-2'),/positive integer/);await assert.rejects(run('receive','INV-NEW','--cents=600001'));
+ await run('receive','INV-NEW','--cents=600000');await run('settle','INV-NEW','--cents=360000');await assert.rejects(run('settle','INV-NEW','--cents=1'));ok('duplicate sale, invalid money and overpayment guards');
+ await run('move','HR-101','--to=Viewing room','--note=Confirmed by operator');const card=await run('artwork','HR-101');assert.equal(card.record.location,'Viewing room');assert.equal(card.movements.at(-1).from_location,'Main gallery');ok('location change has matching history');
+ await run('condition','HR-101','--note=Inspected, no change');await assert.rejects(run('condition','HR-101','--date=2026-02-30','--note=x'),/YYYY-MM-DD/);assert.ok(!(await run('attention')).some(r=>r.kind==='condition'&&r.reference==='HR-101'));ok('condition check clears stale flag and rejects impossible date');
+ await run('log','Alex Morgan','--note=Confirmed viewing on Friday');assert.match((await run('contact','Alex Morgan')).notes[0].body,/Friday/);ok('collector log and last-contact');
+ await run('add','artist','--name=Test Artist','--country=NZ');await run('add','contact','--name=Test Collector','--marketing_consent=false');
+ await run('add','artwork','--external_id=TEST-1','--title=Test Work','--artist_id=Test Artist','--currency=NZD','--price_cents=10000');
+ await run('add','consignment','--artwork_id=TEST-1','--consignor=Test Artist',`--starts_on=${day(-1)}`,`--ends_on=${day(30)}`,'--commission_pct=40','--agreement_ref=Signed test agreement');
+ await run('add','exhibition','--name=Test Exhibition','--venue=Side room',`--opens_on=${day(0)}`,`--closes_on=${day(10)}`);await run('hang','Test Exhibition','--artwork=TEST-1');await run('hang','Test Exhibition','--artwork=TEST-1');assert.equal((await run('exhibitions')).find(e=>e.name==='Test Exhibition').works,1);ok('all five add types and idempotent exhibition membership');
+ const importArgs=['import','artlogic',`--artworks=${path.join(REPO_ROOT,'examples/artlogic-artworks.csv')}`,`--contacts=${path.join(REPO_ROOT,'examples/artlogic-contacts.csv')}`];
+ const before=(await run('artworks')).length;const dry=await run(...importArgs,'--dry-run');assert.equal(dry.artworks,2);assert.equal((await run('artworks')).length,before);await run(...importArgs);await run('move','EXT-001','--to=Local location');await run(...importArgs);assert.equal((await run('artworks')).length,before+2);assert.equal((await run('artwork','EXT-001')).record.location,'Local location');assert.equal(n((await run('artwork','EXT-001')).record.price_cents),125050);assert.equal((await run('contact','Pat Rowan')).record.marketing_consent,false);ok('dry run, exact cents, repeat import and preservation of local position');
+ assert.equal(parseCsv('\ufeffID,Name\r\n1,"One, two\nthree"\r\n')[0].Name,'One, two\nthree');assert.throws(()=>parseCsv('ID,ID\n1,2'));assert.throws(()=>parseCsv('ID,Name\n1,"bad'));ok('quoted CSV, BOM, newlines and malformed headers');
+ const bad=path.join(scratch,'bad.csv');fs.writeFileSync(bad,'Stock number,Artist,Title,Currency,Retail price\nGOOD,A,Good,NZD,10\nBAD,A,Bad,NZD,nope\n');await assert.rejects(run('import','artlogic',`--artworks=${bad}`),/price/);assert.equal((await run('artworks')).length,before+2);ok('one bad row writes nothing');
+ const snap=await run('export');assert.equal(Object.keys(snap.records).length,10);assert.ok(snap.records.notes.length>=2);const exp=path.join(scratch,'snapshot.json');await run('export',`--out=${exp}`);await assert.rejects(run('export',`--out=${exp}`),/EEXIST/);ok('full export and no overwrite');
+ const draft=await run('draft-followups');assert.equal(draft.sent,false);assert.match(fs.readFileSync(draft.file,'utf8'),/Alex Morgan/);assert.doesNotMatch(fs.readFileSync(draft.file,'utf8'),/Alex Chen/);ok('drafts remain files and exclude unconsented contacts');
+ await assert.rejects(run('nonexistent'),/Unknown command/);ok('unknown command fails');
+ await db.close();db=null;
+ assert.equal(JSON.parse(script('gallery.mjs',['stocktake','--json']).stdout).length,before+2);assert.match(script('gallery.mjs',['contact','Alex'],1).stderr,/Ambiguous/);assert.match(script('gallery.mjs',['--help']).stdout,/import artlogic/);ok('real CLI JSON, help and exit status');
+ script('view.mjs');script('docs.mjs');const view=fs.readFileSync(path.join(process.env.OUTPUT_DIR,'views','week.html'),'utf8');assert.match(view,/Harbour Rooms/);assert.match(view,/Tidal Study/);assert.ok(fs.readdirSync(path.join(process.env.OUTPUT_DIR,'docs-out','artist-statement')).length>=3);ok('all branded documents and dashboards render');
+ console.log(`PASS: ${checks} checks, ${Object.keys(reads).length} read commands, ${questions.length} questions, 34 agent commands.`);
+}finally{if(db)await db.close();fs.rmSync(scratch,{recursive:true,force:true});}

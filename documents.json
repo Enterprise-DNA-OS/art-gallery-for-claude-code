@@ -1,11 +1,51 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
+    "name": "artist-statement",
+    "title": "Artist sales statement",
+    "for_each": "select id,name from artists order by name",
     "file": "name",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "Consigned works",
+        "sql": "select w.external_id as stock,w.title,w.status,c.consignor,c.ends_on,c.commission_pct,c.agreement_ref from artworks w join consignments c on c.artwork_id=w.id where w.artist_id=$1 order by w.external_id"
+      },
+      {
+        "title": "Sales and recorded payments",
+        "note": "Review the contract and tax treatment before settling. This document does not transfer money.",
+        "sql": "select s.ref,s.sold_on,s.currency,s.total_cents,s.artist_due_cents,s.artist_paid_cents,s.artist_due_cents-s.artist_paid_cents as balance_cents from sales s join artworks w on w.id=s.artwork_id where w.artist_id=$1 order by s.sold_on"
+      }
+    ]
+  },
+  {
+    "name": "condition-report",
+    "title": "Artwork condition record",
+    "for_each": "select id,external_id as name from artworks order by external_id",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Identification and condition",
+        "sql": "select w.external_id as stock,w.title,a.name as artist,w.medium,w.dimensions,w.location,w.condition_date,w.condition_note,w.provenance from artworks w join artists a on a.id=w.artist_id where w.id=$1"
+      },
+      {
+        "title": "Movement history",
+        "sql": "select moved_on,from_location,to_location,note from movements where artwork_id=$1 order by created_at"
+      }
+    ]
+  },
+  {
+    "name": "exhibition-checklist",
+    "title": "Exhibition checklist and price list",
+    "for_each": "select id,name from exhibitions order by name",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Exhibition",
+        "sql": "select name,venue,opens_on,closes_on from exhibitions where id=$1"
+      },
+      {
+        "title": "Works",
+        "sql": "select w.external_id as stock,a.name as artist,w.title,w.medium,w.dimensions,w.status,w.currency,w.price_cents from exhibition_artworks x join artworks w on w.id=x.artwork_id join artists a on a.id=w.artist_id where x.exhibition_id=$1 order by w.external_id"
+      }
     ]
   }
 ]

@@ -1,13 +1,46 @@
 [
   {
     "name": "week",
-    "title": "This week",
-    "subtitle": "Art Gallery for Claude Code: what needs attention, rendered by npm run view",
+    "title": "Gallery week",
+    "subtitle": "Private working record. Demo data is fictional.",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Decisions",
+        "sql": "select * from attention order by kind,reference"
+      },
+      {
+        "title": "Consignments",
+        "sql": "select stock,title,artist,days_left,agreement_ref from consignment_due order by days_left"
+      },
+      {
+        "title": "Collectors",
+        "sql": "select collector,title,followup_on,days_overdue from collector_followups order by followup_on"
+      }
+    ]
+  },
+  {
+    "name": "money",
+    "title": "Collector balances and artist settlements",
+    "sections": [
+      {
+        "title": "Sales ledger",
+        "note": "Amounts stay in their original currency. Artist shares use recorded contract percentages, before tax adjustments. This is not a tax ledger.",
+        "sql": "select ref,artist,title,currency,total_cents,collector_balance_cents,artist_balance_cents,settlement_status from settlements order by currency,artist"
+      },
+      {
+        "title": "Resale review",
+        "note": "Indicative amounts only. Copyright Agency determines eligibility. Nothing is submitted automatically.",
+        "sql": "select ref,title,market,currency,review,royalty_status,indicative_royalty_cents from royalty_checks"
+      }
+    ]
+  },
+  {
+    "name": "stock",
+    "title": "Artwork stocktake",
+    "sections": [
+      {
+        "title": "Inventory",
+        "sql": "select stock,title,artist,status,location,currency,price_cents,condition_date from inventory order by location,stock"
       }
     ]
   }

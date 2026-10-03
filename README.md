@@ -1,115 +1,119 @@
-<h1 align="center">Art Gallery for Claude Code</h1>
+# Art Gallery for Claude Code
 
-<p align="center">
-  <strong>The open-source commercial art gallery management system that is just a database and Claude Code.</strong>
-</p>
+The open-source commercial gallery record: artworks, artists, consignments, collectors, sales and exhibitions in a database you own. Built by Enterprise DNA. Works with Claude Code, Codex, OpenCode or Cursor.
 
-<p align="center">
-  Created by <a href="https://www.enterprisedna.co"><strong>Enterprise DNA</strong></a>. Free and open source. Works with Claude Code, Codex, OpenCode or Cursor.
-</p>
-
-<!-- three-doors -->
-<table align="center">
-  <tr>
-    <td align="center"><strong>Do it yourself</strong><br/>Clone it, run it, own it. Free, MIT.<br/><a href="#quick-start">Quick start</a></td>
-    <td align="center"><strong>We customise it</strong><br/>Your fields, your rules, your Artlogic data brought across.<br/><a href="https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=artlogic">Book a call</a></td>
-    <td align="center"><strong>We run it for you</strong><br/>Installed, connected and operated inside Omni. Setup fee, then a retainer.<br/><a href="https://enterprisedna.co/omni/instead-of/artlogic?utm_source=github&utm_medium=readme&utm_campaign=artlogic">How it works</a></td>
-  </tr>
-</table>
-
-<p align="center">
-  <a href="#what-is-this">What is this</a> &bull;
-  <a href="#why-no-front-end">Why no front end</a> &bull;
-  <a href="#quick-start">Quick start</a> &bull;
-  <a href="#the-commands">Commands</a> &bull;
-  <a href="#instead-of-artlogic">Instead of Artlogic</a> &bull;
-  <a href="#want-it-installed-and-run-for-you">Installed for you</a> &bull;
-  <a href="#license">License</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Node-20+-339933?style=flat-square" alt="Node 20+" />
-  <img src="https://img.shields.io/badge/PostgreSQL-any-336791?style=flat-square" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/PGlite-embedded-3ecf8e?style=flat-square" alt="PGlite" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License" />
-</p>
-
----
-
-## What is this
-
-Art Gallery for Claude Code does the job you pay Artlogic for, as a Postgres database and a set of agent commands. There is no web front end. You open the folder in [Claude Code](https://claude.com/claude-code) (or Codex, OpenCode, Cursor: see `AGENTS.md`) and ask for what you want in plain language. It runs the right query, and it can answer questions the Artlogic dashboard cannot.
-
-<!-- TODO(author): the annual bill. One sentence: what a 10 to 50 person business typically pays Artlogic per year, all in, with a source. -->
-
-Want the same thing with a web front end, or built on a different stack? That is a customisation, and it is exactly what Enterprise DNA does: [book a call](https://enterprisedna.co/omni/book/?utm_source=github&utm_medium=readme&utm_campaign=artlogic).
-
-<!-- TODO(author): two or three sentences on what this specific product covers and who it is for. -->
-
-## Why no front end
-
-- The front end was only ever there because the database was hard to talk to. That is no longer true.
-- Your data sits in plain Postgres tables you own. Any tool can read them. No export, no lock-in.
-- No seats, no tiers, no add-ons. Read [docs/why-no-front-end.md](docs/why-no-front-end.md) for the honest trade-offs too.
+| Do it yourself | We customise it | We run it for you |
+|---|---|---|
+| Free, MIT. Follow the quick start. | Your fields, rules, Artlogic migration and optional interface. [Book a call](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=artlogic). | Installed, connected and operated through **Omni by Enterprise DNA**. One setup fee, then a retainer. [How it works](https://enterprisedna.co/omni/instead-of/artlogic). |
 
 ## Quick start
 
-Sixty seconds, no database install (an embedded Postgres runs inside Node):
+Node 20 or later, Windows or Linux. No database installation needed for the demo.
 
 ```bash
 git clone https://github.com/Enterprise-DNA-OS/art-gallery-for-claude-code.git
 cd art-gallery-for-claude-code
 npm install
+npm test
 npm run demo
+npm run view
+npm run docs
 ```
 
-Then open the folder in Claude Code and type a slash command. <!-- TODO(author): name the first command to try. -->
+Open the folder in your coding agent and ask for /weekly-review. The fictional gallery has an expired consignment, a missing agreement, an overdue collector balance, a fully collected sale awaiting artist settlement, stale condition checks and an Australian resale awaiting review. All dates move with the day you seed it. The demo includes two currencies so a mixed total cannot masquerade as a cash balance.
 
-### Use it with your own Postgres or Supabase
+## What this covers
 
-Copy `.env.example` to `.env`, set `DATABASE_URL`, then `npm run migrate`. Same commands, shared data, no per-seat fee.
+The five weekly rituals are the stocktake, consignment review, collector follow-ups, artist settlements and exhibition checklist. Commands also record offers, sales, receipts, movements, condition inspections and collector notes. A sale requires a current written agreement reference. Duplicate sales and overpayments are refused. Receipts and artist payments are records only: no money moves. Documents are working records, not tax invoices.
 
-## The commands
+Artwork and collector exports from Artlogic import in one command after a dry run. Financial history, media files and agreements need separate reconciliation. Read [the switching guide](docs/replace-artlogic.md) for exact mappings and limits. Images remain files you manage separately.
 
-<!-- TODO(author): a table of the slash commands in .claude/commands and what each one does. -->
+## Commands
 
-| Command | What it does |
-|---|---|
-| `/...` | ... |
+- `/attention`: The decisions needing attention, with the reason for each.
+- `/stocktake`: The location and condition record for every work.
+- `/artworks`: Inventory with status, asking price and provenance.
+- `/artists`: The represented artist list.
+- `/contacts`: Collector details and permission records.
+- `/consignments`: Consignment expiry and agreement references.
+- `/settlements`: Collector balances and artist amounts still owed.
+- `/sales`: Sale records and recorded receipts.
+- `/offers`: All open offers and next follow-up dates.
+- `/followups`: Collector follow-ups due today or overdue.
+- `/exhibitions`: The exhibition calendar and count of works.
+- `/movements`: Where each work moved and why.
+- `/royalties`: Resale reporting review and evidence.
+- `/compliance`: Agreement and resale review checks, with source links.
+- `/questions`: Ten combined questions answered from the records.
+- `/artist`: Artist
+- `/artwork`: Artwork
+- `/contact`: Contact
+- `/add`: Add
+- `/offer`: Offer
+- `/sale`: Sale
+- `/receive`: Receive
+- `/settle`: Settle
+- `/move`: Move
+- `/condition`: Condition
+- `/log`: Log
+- `/hang`: Hang
+- `/royalty-review`: Royalty review
+- `/import`: Import
+- `/export`: Export
+- `/draft-followups`: Draft followups
+- `/weekly-review`: Weekly review
+- `/customise`: Customise
+- `/new-view`: New view
 
-## Instead of artlogic
 
-<!-- TODO(author): how to bring data across from Artlogic; link docs/replace-artlogic.md -->
+Every command recipe lives in .claude/commands. AGENTS.md points other runtimes to the same instructions. `node scripts/gallery.mjs --help` lists arguments. Reads default to aligned text and accept --json. References accept a stock code, case-insensitive name or ID prefix; ambiguous names list candidates and exit 1.
 
-## Architecture
+## Ten questions to ask across your records
 
-```
-art-gallery-for-claude-code/
-  CLAUDE.md                 how the operator wants this run (routing table + house rules)
-  AGENTS.md                 the same, for Codex / OpenCode / Cursor / Gemini CLI
-  .claude/commands/         the slash commands
-  scripts/                  the CLI the commands drive
-  scripts/lib/db.mjs        one adapter: DATABASE_URL (pg) or embedded PGlite
-  supabase/migrations/      plain SQL schema
-  supabase/seed.sql         demo data
-  docs/                     the thesis and the migration guide
-```
+These are demonstrated queries, not a claim that Artlogic lacks all equivalent reports. Each is answered by `node scripts/gallery.mjs questions --question=N`:
 
-## Built for coding agents
+1. Which expiring consignments have an overdue collector follow-up?
+2. How much is ready for each artist, and how much are collectors still paying?
+3. Which works on exhibition have an old or missing condition check?
+4. Which unsold works are missing the consignment agreement reference?
+5. Which available works have not had a collector offer in the last month?
+6. Which Australian resales still need reporting review?
+7. Which collectors need follow-up but have no marketing permission?
+8. Which artists have the most unsold value at each location?
+9. Which reserved works have an overdue viewing follow-up?
+10. What collector balances and artist liabilities remain by currency?
 
-The database, CLI and command recipes work with Claude Code, Codex, OpenCode or Cursor. Ask your coding agent for a new command and have it implement and test the change against the same records.
+## Your first hour: ten things to ask for
 
-## Contributing
+1. Show the gallery's attention list and explain each decision.
+2. Which consignments end in the next fortnight?
+3. Show Tidal Study's record and movements.
+4. Record a condition inspection supplied by me.
+5. Move Night Crossing to the viewing room.
+6. Read Alex Morgan's collector notes before drafting a reply.
+7. Show artist settlements, separating AUD and NZD.
+8. Render the Coast and Country exhibition price list.
+9. Test our Artlogic export and show what will not carry over.
+10. Add a storage-rack field and a stocktake view through /customise.
 
-Issues and pull requests are welcome. Keep the shape: plain SQL, a small CLI, a slash command per recurring job, no front end.
+## Documents and views
 
-## Want it installed and run for you?
+Set business_name, logo_path and colours in brand.json. Use an absolute image path or URL for a logo. `npm run docs` creates artist statements, condition records and exhibition checklists in docs-out. `npm run view` creates week, stock and money pages in views. Open the HTML and print to PDF when required. These files contain private information. Nothing is hosted or sent. Read [why there is no front end](docs/why-no-front-end.md).
 
-Enterprise DNA installs Art Gallery for Claude Code for your business, migrates your Artlogic data, connects it to the rest of your tools, and runs it for you as part of **Omni**, our managed Command Center. One setup fee, then a monthly retainer.
+## Rules and boundaries
 
-- Book a call: [enterprisedna.co/omni/book](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=artlogic)
-- Read more: [enterprisedna.co/omni/instead-of/artlogic](https://enterprisedna.co/omni/instead-of/artlogic?utm_source=github&utm_medium=readme&utm_campaign=artlogic)
+[Compliance notes](docs/compliance.md) cite Australian resale guidance and NAVA contract practice. Royalty amounts are indicative, with eligibility left to the scheme administrator. New Zealand resale records are flagged for manual review. Condition intervals and settlement timing are house rules. The base covers consigned individual works, not edition inventory, owned-stock accounting, a public website or tax processing.
+
+## Your own data
+
+Use a fresh DATA_DIR and run migrate without seed. For a shared Postgres database set DATABASE_URL in the environment or an ignored .env file and run npm run migrate. Dates stay in UTC calendar form. The same migrations run in PGlite and Postgres. Production hosting, user permissions, backup schedules and image storage require configuration. Never run two local processes against the same embedded directory.
+
+Export all ten domain record types with `node scripts/gallery.mjs export --out=private-backup.json`. The destination must be new, preventing accidental overwrites. This is an exchange snapshot, not a restore command. Keep native database backups and image files too.
+
+## Validation
+
+npm test uses temporary data and output directories and ignores DATABASE_URL. The explicit TEST_DATABASE_URL override is only for a disposable CI database. It checks migration and seed repeatability, every read, sale and money guards, ambiguous names, imports, drafts and document generation. GitHub Actions runs the same suite on Windows and Linux with Node 22, plus a separate Postgres check. Local execution evidence is in docs/validation.md.
 
 ## License
 
-MIT. Copyright (c) 2026 Enterprise DNA.
+MIT. Copyright 2026 Enterprise DNA. Artlogic is named for compatibility and comparison. No affiliation or endorsement is implied.

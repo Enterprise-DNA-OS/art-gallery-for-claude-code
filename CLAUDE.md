@@ -1,43 +1,61 @@
 # Art Gallery for Claude Code: operating instructions
 
-This file is the brain. Claude Code reads it at the start of every session. It says who this is for, how work gets done, and the one right way to do each recurring job.
+## Operator context
 
-## Who this is for
-
-- **Business:** [YOUR BUSINESS]
-- **Operator:** [YOUR NAME], [your role]
-- **What matters most:** [the one or two outcomes you care about]
-
-Fill this in once. A worker with context knows. A worker without it guesses.
+This starts with fictional Harbour Rooms Gallery demo records. Replace the business name in brand.json and record your actual operator, country and contract rules here before importing live records. Do not mix the demo with a live collection. Start live data in a fresh DATA_DIR and run migrate without seed.
 
 ## How to work
 
-1. **Take a brief, not a script.** The operator describes the outcome. You run the right command and present the answer.
-2. **Read before you write.** Before drafting anything about a record, read its full history first.
-3. **Plain language.** Short sentences. No filler. Numbers in tables.
-4. **Silent success, loud problems.** No play-by-play. Say what broke and what you did about it.
-5. **Stop at the line.** Anything that sends, deletes, or faces a customer waits for a yes in this session.
+Read records before changing them. Dates are calendar dates. Money is integer cents with an explicit currency. Keep AUD and NZD totals separate. No email, publishing, banking, card charges or submissions are implemented. A receipt or settlement is a record of a payment made elsewhere. Ask for missing facts and never infer a signed agreement or consent. Names resolve case-insensitively and ambiguous names must be disambiguated.
 
-## Routing table: one right way for each recurring job
+## Routing
 
-| When the operator asks for... | Use this |
+| Job | Command |
 |---|---|
-| <!-- TODO(author): one row per slash command --> | `/...` |
+| Attention | `/attention` |
+| Stocktake | `/stocktake` |
+| Artworks | `/artworks` |
+| Artists | `/artists` |
+| Contacts | `/contacts` |
+| Consignments | `/consignments` |
+| Settlements | `/settlements` |
+| Sales | `/sales` |
+| Offers | `/offers` |
+| Followups | `/followups` |
+| Exhibitions | `/exhibitions` |
+| Movements | `/movements` |
+| Royalties | `/royalties` |
+| Compliance | `/compliance` |
+| Questions | `/questions` |
+| Artist | `/artist` |
+| Artwork | `/artwork` |
+| Contact | `/contact` |
+| Add | `/add` |
+| Offer | `/offer` |
+| Sale | `/sale` |
+| Receive | `/receive` |
+| Settle | `/settle` |
+| Move | `/move` |
+| Condition | `/condition` |
+| Log | `/log` |
+| Hang | `/hang` |
+| Royalty review | `/royalty-review` |
+| Import | `/import` |
+| Export | `/export` |
+| Draft followups | `/draft-followups` |
+| Weekly review | `/weekly-review` |
+| Customise | `/customise` |
+| New view | `/new-view` |
 
-If an ask fits nothing here, run the CLI directly (`npm run <cli> -- --help`) and then propose a new command for it.
+## Files and data
 
-## Hard rules
+- scripts/gallery.mjs is the single domain CLI. Use --help and --json.
+- supabase/migrations holds append-only migrations. npm run migrate applies them transactionally.
+- DATABASE_URL selects a team Postgres database. Otherwise DATA_DIR selects a local PGlite database. Never open the same local data directory from two processes.
+- .claude/commands is the one job library for every agent runtime.
+- drafts, views and docs-out are private generated output. Export files contain collector data and must be stored privately.
+- docs/compliance.md separates cited checks from house rules. A resale flag is not a tax or legal determination.
+- Current scope is consigned single artworks. Tax calculations, editions, owned-stock cost accounting, banking, website, marketplace and mobile integrations need separate implementation.
+- Run npm test after changes. Never use the demo seed against live records. Never delete records without the operator's explicit instruction.
 
-- Never send email or messages from here. Draft to `drafts/`, a person sends.
-- Never delete records without an explicit yes in this session. Prefer marking closed or archived.
-- Never invent a record. If a name is ambiguous, list the candidates and ask.
-- The database is the source of truth. If the answer is not in it, say so.
-
-## Where things live
-
-- `scripts/` the CLI. `scripts/lib/db.mjs` picks `DATABASE_URL` (Postgres, Supabase) or the embedded database in `.data/`.
-- `supabase/migrations/` the schema, plain SQL. `npm run migrate` applies it.
-- `.claude/commands/` the slash commands. Add one every time the same ask comes twice.
-- `docs/` the thesis and the guide for moving off Artlogic.
-
-Built by Enterprise DNA. Installed and run for you as part of Omni: https://enterprisedna.co/omni/instead-of/artlogic
+Built and run for businesses through Omni by Enterprise DNA.
