@@ -4,7 +4,7 @@ The open-source commercial gallery record: artworks, artists, consignments, coll
 
 | Do it yourself | We customise it | We run it for you |
 |---|---|---|
-| Free, MIT. Follow the quick start. | Your fields, rules, Artlogic migration and optional interface. [Book a call](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=artlogic). | Installed, connected and operated through **Omni by Enterprise DNA**. One setup fee, then a retainer. [How it works](https://enterprisedna.co/omni/instead-of/artlogic). |
+| Free, MIT. Follow the quick start. | Your fields, rules, Artlogic migration and optional interface. [Book a call](https://enterprisedna.co/omni/book/?offer=replace-software&utm_source=github&utm_medium=readme&utm_campaign=artlogic). | Installed, connected and operated through **Omni by Enterprise DNA**. One setup fee, then a retainer. [How it works](https://enterprisedna.co/omni/instead-of/artlogic?utm_source=github&utm_medium=readme&utm_campaign=artlogic). |
 
 ## Quick start
 
